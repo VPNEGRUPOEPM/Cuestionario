@@ -1323,7 +1323,7 @@
             <span class="section-heading__number">01</span>
             <div>
               <span class="section-heading__eyebrow">Identificación</span>
-              <h2>Información de quien responde</h2>
+              <h2>Nombre de quien responde</h2>
               <p>El nombre quedará asociado a las respuestas que se muestran en el panel de consulta.</p>
             </div>
           </div>
@@ -1334,20 +1334,6 @@
               <div class="input-shell">
                 <span class="input-shell__icon" aria-hidden="true">●</span>
                 <input class="control" id="name" type="text" maxlength="180" autocomplete="name" placeholder="Ejemplo: María González" required>
-              </div>
-            </div>
-            <div class="field">
-              <label for="email">Correo electrónico <span class="optional">(opcional)</span></label>
-              <div class="input-shell">
-                <span class="input-shell__icon" aria-hidden="true">@</span>
-                <input class="control" id="email" type="email" maxlength="250" autocomplete="email" placeholder="nombre@empresa.com">
-              </div>
-            </div>
-            <div class="field">
-              <label for="area">Área o empresa <span class="optional">(opcional)</span></label>
-              <div class="input-shell">
-                <span class="input-shell__icon" aria-hidden="true">◇</span>
-                <input class="control" id="area" type="text" maxlength="250" placeholder="Ejemplo: EPM – Distribución">
               </div>
             </div>
           </div>
@@ -1767,7 +1753,7 @@ function updateHero(view) {
 
     elements.heroBadges.innerHTML = `
       <span>Consulta directa desde Google Sheets</span>
-      <span>Filtro por pregunta y participante</span>
+      <span>Filtro por pregunta y nombre</span>
       <span>Actualización manual disponible</span>
     `;
 
@@ -2201,9 +2187,6 @@ async function submitSurvey(event) {
   const name =
     document.getElementById('name');
 
-  const email =
-    document.getElementById('email');
-
   const response =
     collectAnswers();
 
@@ -2211,18 +2194,6 @@ async function submitSurvey(event) {
     name.focus();
     showFormMessage(
       'Ingrese el nombre de la persona que responde.',
-      'error'
-    );
-    return;
-  }
-
-  if (
-    email.value &&
-    !email.checkValidity()
-  ) {
-    email.focus();
-    showFormMessage(
-      'Revise el formato del correo electrónico.',
       'error'
     );
     return;
@@ -2281,12 +2252,8 @@ async function submitSurvey(event) {
     action: 'submit',
     requestId: createRequestId(),
     name: name.value.trim(),
-    email: email.value.trim(),
-    area:
-      document
-        .getElementById('area')
-        .value
-        .trim(),
+    email: '',
+    area: '',
     q1: response.answers[0],
     q2: response.answers[1],
     q3: response.answers[2],
@@ -2652,7 +2619,7 @@ function renderQuestionResults() {
       (row) =>
         !query ||
         normalize(
-          `${row.date} ${row.name} ${row.email} ${row.area} ${row.answer}`
+          `${row.date} ${row.name} ${row.answer}`
         ).includes(query)
     );
 
@@ -2901,15 +2868,7 @@ function renderBarChart(
             </strong>
 
             <span>
-              ${escapeHtml(
-                record.area ||
-                'Área no registrada'
-              )}
-              ${
-                record.date
-                  ? ` · ${escapeHtml(record.date)}`
-                  : ''
-              }
+              ${escapeHtml(record.date || '')}
             </span>
 
             ${
@@ -3041,7 +3000,7 @@ function renderConsolidatedResults() {
       (row) =>
         !query ||
         normalize(
-          `${row.date} ${row.name} ${row.email} ${row.area} ${row.answers.join(' ')}`
+          `${row.date} ${row.name} ${row.answers.join(' ')}`
         ).includes(query)
     );
 
@@ -3067,8 +3026,6 @@ function renderConsolidatedResults() {
     <tr>
       <th>Fecha</th>
       <th>Nombre</th>
-      <th>Correo</th>
-      <th>Área / empresa</th>
       ${state.results.questions
         .map(
           (question) =>
@@ -3086,12 +3043,6 @@ function renderConsolidatedResults() {
         </td>
         <td class="cell-name">
           ${escapeHtml(row.name || 'Sin nombre')}
-        </td>
-        <td>
-          ${escapeHtml(row.email || '—')}
-        </td>
-        <td>
-          ${escapeHtml(row.area || '—')}
         </td>
         ${row.answers.map(
           (answer) => `
@@ -3115,14 +3066,6 @@ function renderConsolidatedResults() {
           </span>
         </div>
 
-        <div class="response-card__meta">
-          <span>
-            ${escapeHtml(row.area || 'Área no registrada')}
-          </span>
-          <span>
-            ${escapeHtml(row.email || 'Correo no registrado')}
-          </span>
-        </div>
 
         <div class="response-card__answers">
           ${row.answers
