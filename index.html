@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#00843D">
   <meta name="description" content="Encuesta de participación y consulta de respuestas del Grupo EPM.">
   <title>Encuesta de participación | Grupo EPM</title>
-  <!-- Conexión estable Apps Script v5: FORM POST + JSONP prefix -->
+  <!-- Arquitectura v9: POST JSON para guardar + JSONP Apps Script para visualizar -->
   <!-- ESTILOS CORPORATIVOS EPM INTEGRADOS -->
   <style>
 :root{
@@ -315,7 +315,403 @@
 @media(max-width:700px){.topbar__inner,.page{width:min(100% - 22px,1120px)}.brand__copy small{display:none}.main-nav__item{padding:9px 11px}.main-nav__icon{display:none}.page{padding-top:20px}.hero{padding:31px 24px;border-radius:23px}.hero h1{font-size:37px}.progress-card{top:88px}.identity-grid{grid-template-columns:1fr}.field--wide{grid-column:auto}.questions-heading{align-items:flex-start;flex-direction:column;gap:7px}.submit-panel{align-items:stretch;flex-direction:column}.primary-button{width:100%}.metrics{grid-template-columns:1fr}.results-panel__header{align-items:stretch;flex-direction:column}.icon-button{width:100%}.segmented-control{display:flex;margin-inline:18px}.segmented-control__item{flex:1}.results-toolbar,.selected-question{padding-inline:18px}.table-wrapper{display:none}.responses-mobile{display:block}.footer{align-items:flex-start;flex-direction:column}}
 @media(max-width:460px){.brand__copy{display:none}.brand__mark{width:44px;height:44px}.main-nav{gap:3px}.main-nav__item{min-height:38px;padding:8px 10px;font-size:10px}.main-nav__count{min-width:19px;height:19px}.hero h1{font-size:33px}.hero__badges span:last-child{display:none}.section-heading{gap:12px}.section-heading__number{width:42px;height:42px}.question-card__help{margin-left:0}.success-card__actions,.segmented-control{flex-direction:column}}
 
-  </style>
+  
+/* =========================================================
+   VISUAL DE RESULTADOS POR PREGUNTA
+   ========================================================= */
+
+.question-analytics {
+  display: grid;
+  gap: 22px;
+  margin-top: 18px;
+}
+
+.question-analytics[hidden] {
+  display: none;
+}
+
+.chart-card,
+.answer-detail-section {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+.chart-card {
+  padding: 22px;
+}
+
+.chart-card__header,
+.answer-detail-section__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.chart-card__header {
+  margin-bottom: 22px;
+}
+
+.chart-card__eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.chart-card h3,
+.answer-detail-section h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.chart-card__total {
+  min-width: 118px;
+  padding: 11px 14px;
+  border: 1px solid #cde1d4;
+  border-radius: 14px;
+  background: var(--mint);
+  text-align: right;
+}
+
+.chart-card__total strong,
+.chart-card__total span {
+  display: block;
+}
+
+.chart-card__total strong {
+  color: var(--green-dark);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.chart-card__total span {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.bar-chart {
+  display: grid;
+  gap: 16px;
+}
+
+.bar-item {
+  display: grid;
+  grid-template-columns: minmax(190px, 38%) 1fr minmax(84px, auto);
+  align-items: center;
+  gap: 14px;
+  padding: 12px 13px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  background: #fbfcfb;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.bar-item:hover {
+  border-color: #c4dccd;
+  background: #f8fcf9;
+  transform: translateY(-1px);
+}
+
+.bar-item__label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.bar-item__index {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  color: var(--green-dark);
+  background: var(--mint);
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.bar-item__answer {
+  min-width: 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.42;
+}
+
+.bar-item__track {
+  position: relative;
+  height: 20px;
+  overflow: hidden;
+  border-radius: 999px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #eef3f0 0,
+      #eef3f0 calc(25% - 1px),
+      #dfe8e2 25%
+    );
+}
+
+.bar-item__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--bar-width, 0%);
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      90deg,
+      var(--green-dark),
+      var(--green),
+      var(--lime)
+    );
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,.08);
+  animation: grow-bar 520ms cubic-bezier(.2,.8,.2,1) both;
+}
+
+.bar-item__value {
+  text-align: right;
+}
+
+.bar-item__value strong,
+.bar-item__value span {
+  display: block;
+}
+
+.bar-item__value strong {
+  color: var(--ink);
+  font-size: 17px;
+  line-height: 1;
+}
+
+.bar-item__value span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+@keyframes grow-bar {
+  from {
+    width: 0;
+  }
+}
+
+.answer-detail-section__header {
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--line);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(232,243,236,.9),
+      rgba(255,255,255,.96)
+    );
+}
+
+.answer-detail-section__header p {
+  max-width: 360px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+  text-align: right;
+}
+
+.answer-groups {
+  display: grid;
+  gap: 0;
+}
+
+.answer-group {
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.answer-group:last-child {
+  border-bottom: 0;
+}
+
+.answer-group__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 15px;
+}
+
+.answer-group__title {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  min-width: 0;
+}
+
+.answer-group__badge {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  color: #ffffff;
+  background: var(--green);
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.answer-group__title h4 {
+  margin: 1px 0 0;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.answer-group__count {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: var(--green-dark);
+  background: var(--mint);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.people-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
+  gap: 10px;
+}
+
+.person-card {
+  min-width: 0;
+  padding: 12px 13px;
+  border: 1px solid #e0e8e3;
+  border-radius: 13px;
+  background: #fbfcfb;
+}
+
+.person-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.person-card__name {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+}
+
+.person-card__date {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.person-card__meta {
+  display: block;
+  margin-top: 5px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.person-card__custom-answer {
+  display: block;
+  margin-top: 8px;
+  padding: 8px 9px;
+  border-left: 3px solid var(--lime);
+  border-radius: 0 8px 8px 0;
+  color: var(--ink-soft);
+  background: #f4f8f1;
+  font-size: 10px;
+  font-style: italic;
+  line-height: 1.45;
+}
+
+@media (max-width: 900px) {
+  .bar-item {
+    grid-template-columns: minmax(160px, 42%) 1fr 76px;
+  }
+}
+
+@media (max-width: 700px) {
+  .chart-card {
+    padding: 17px;
+  }
+
+  .chart-card__header,
+  .answer-detail-section__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .chart-card__total {
+    width: 100%;
+    text-align: left;
+  }
+
+  .bar-item {
+    grid-template-columns: 1fr auto;
+    gap: 9px 12px;
+  }
+
+  .bar-item__label {
+    grid-column: 1 / 2;
+  }
+
+  .bar-item__value {
+    grid-column: 2 / 3;
+    grid-row: 1;
+  }
+
+  .bar-item__track {
+    grid-column: 1 / -1;
+  }
+
+  .answer-detail-section__header p {
+    max-width: none;
+    text-align: left;
+  }
+
+  .answer-group {
+    padding: 17px;
+  }
+
+  .people-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+</style>
 </head>
 <body>
   <div class="ambient ambient--one"></div>
@@ -520,7 +916,7 @@
             <div>
               <span class="results-panel__eyebrow">Explorador de respuestas</span>
               <h2>Detalle de participación</h2>
-              <p>Consulte cada pregunta o revise las cinco respuestas de una persona en una sola fila.</p>
+              <p>Consulte la distribución por pregunta o revise las cuatro respuestas de una persona en una sola fila.</p>
             </div>
             <button class="icon-button" id="refreshButton" type="button"><span aria-hidden="true">↻</span> Actualizar</button>
           </div>
@@ -545,6 +941,36 @@
           </div>
 
           <div class="selected-question" id="questionTitle"></div>
+
+          <section class="question-analytics" id="questionAnalytics" hidden>
+            <div class="chart-card">
+              <div class="chart-card__header">
+                <div>
+                  <span class="chart-card__eyebrow">Distribución de respuestas</span>
+                  <h3>Participación por opción</h3>
+                </div>
+                <div class="chart-card__total">
+                  <strong id="chartTotal">0</strong>
+                  <span>respuestas visibles</span>
+                </div>
+              </div>
+              <div class="bar-chart" id="barChart"></div>
+            </div>
+
+            <div class="answer-detail-section">
+              <div class="answer-detail-section__header">
+                <div>
+                  <span class="chart-card__eyebrow">Detalle por respuesta</span>
+                  <h3>Personas que eligieron cada opción</h3>
+                </div>
+                <p>
+                  Los nombres aparecen agrupados según la respuesta seleccionada.
+                </p>
+              </div>
+              <div class="answer-groups" id="answerGroups"></div>
+            </div>
+          </section>
+
           <div class="responses-mobile" id="responsesMobile"></div>
           <div class="table-wrapper">
             <table><thead id="tableHead"></thead><tbody id="tableBody"></tbody></table>
@@ -558,25 +984,24 @@
 
     <footer class="footer">
       <span>Grupo EPM</span>
-      <span>HTML publicado en GitHub Pages · Información almacenada en Google Sheets</span>
+      <span>HTML publicado en GitHub Pages · Guardado y resultados mediante Google Apps Script</span>
     </footer>
   </main>
 
 <!-- CONFIGURACIÓN DEL CUESTIONARIO -->
   <script>
 /*
-  CONFIGURACIÓN DEL HTML
-  1. Publique primero Code.gs como aplicación web.
-  2. Pegue en backendUrl la URL que termina en /exec.
-  3. Las cuatro preguntas y las opciones de respuesta también se modifican aquí.
+  CONFIGURACIÓN
+  La misma URL de Apps Script se utiliza para:
+  - Guardar respuestas mediante POST JSON.
+  - Consultar respuestas mediante JSONP.
 */
 window.SURVEY_CONFIG = {
   "organization": "Grupo EPM",
   "title": "Encuesta sobre el entendimiento de los Negocios",
   "subtitle": "Queremos conocer su entendimiento sobre la declaración y alcance de los Negocios del Grupo EPM.",
   "intro": "Responda las cuatro preguntas. La segunda se habilitará únicamente cuando corresponda según la respuesta seleccionada en la primera.",
-  "backendUrl": "https://script.google.com/macros/s/AKfycbyEgawEELayxzA-oMaq43fG2IzHnngiRdbAMdYHUJh0uA3zOX9V-38HvAfMC5csC58x/exec",
-  "requiredBackendVersion": 5,
+  "webAppUrl": "https://script.google.com/macros/s/AKfycbygNhDZ3aIqv2c82AYf-oQeQsCV80Z82a4W9BuzXnQ8nZInt9x70OqWZVKMmjetG06Z/exec",
   "questions": [
     "Según tu entendimiento, existe:",
     "Si en la pregunta anterior elegiste a, b o c, para ti ese Negocio ¿es el mismo Negocio de Comercialización de Nuevas Soluciones?",
@@ -597,17 +1022,16 @@ window.SURVEY_CONFIG = {
 
   <!-- FUNCIONALIDAD COMPLETA INTEGRADA -->
   <script>
-/* global SURVEY_CONFIG */
 'use strict';
 
 const config = window.SURVEY_CONFIG;
+
 const state = {
   currentView: 'survey',
   resultsMode: 'question',
   results: null,
   resultsLoaded: false,
-  resultsRequesting: false,
-  connectionOnline: false
+  resultsRequesting: false
 };
 
 const elements = {
@@ -648,161 +1072,262 @@ const elements = {
   connectionStatus: document.getElementById('connectionStatus'),
   connectionTitle: document.getElementById('connectionTitle'),
   connectionDetail: document.getElementById('connectionDetail'),
-  testConnectionButton: document.getElementById('testConnectionButton')
+  testConnectionButton: document.getElementById('testConnectionButton'),
+  questionAnalytics: document.getElementById('questionAnalytics'),
+  barChart: document.getElementById('barChart'),
+  answerGroups: document.getElementById('answerGroups'),
+  chartTotal: document.getElementById('chartTotal')
 };
 
 initialize();
 
 function initialize() {
-  document.getElementById('brandName').textContent = config.organization;
-  document.title = `${config.title} | ${config.organization}`;
+  document.getElementById('brandName').textContent =
+    config.organization;
+  document.title =
+    `${config.title} | ${config.organization}`;
+
   renderQuestions();
   bindEvents();
   updateProgress();
 
-  const initialView = window.location.hash === '#respuestas'
-    ? 'results'
-    : 'survey';
-  switchView(initialView, { updateHash: false });
+  const requestedView =
+    window.location.hash === '#respuestas'
+      ? 'results'
+      : 'survey';
 
-  if (!isBackendConfigured()) {
-    setConnectionStatus(
-      'offline',
-      'La URL de Apps Script no está configurada',
-      'Revise backendUrl dentro del HTML.'
-    );
-    showFormMessage(
-      'La URL de Apps Script no está configurada correctamente.',
-      'info'
-    );
-  } else {
-    checkBackendConnection();
-  }
+  switchView(requestedView, {
+    updateHash: false
+  });
+
+  checkBackendConnection();
 }
 
 function bindEvents() {
   document.querySelectorAll('[data-view]').forEach((button) => {
-    button.addEventListener('click', () => switchView(button.dataset.view));
-  });
-
-  elements.brandButton.addEventListener('click', () => switchView('survey'));
-  elements.form.addEventListener('input', handleFormInput);
-  elements.form.addEventListener('submit', submitSurvey);
-  document.getElementById('againButton').addEventListener('click', resetSurvey);
-  document.getElementById('seeResultsButton')
-    .addEventListener('click', () => switchView('results'));
-  document.getElementById('retryResultsButton')
-    .addEventListener('click', requestResults);
-  document.getElementById('refreshButton')
-    .addEventListener('click', requestResults);
-  elements.testConnectionButton
-    .addEventListener('click', checkBackendConnection);
-
-  elements.questionSelect.addEventListener('change', renderResults);
-  elements.searchInput.addEventListener('input', renderResults);
-
-  document.querySelectorAll('[data-results-mode]').forEach((button) => {
     button.addEventListener('click', () => {
-      state.resultsMode = button.dataset.resultsMode;
-      document.querySelectorAll('[data-results-mode]').forEach((item) => {
-        const active = item === button;
-        item.classList.toggle('segmented-control__item--active', active);
-        item.setAttribute('aria-selected', String(active));
-      });
-      elements.questionSelect.disabled = state.resultsMode === 'all';
-      renderResults();
+      switchView(button.dataset.view);
     });
   });
 
+  elements.brandButton.addEventListener(
+    'click',
+    () => switchView('survey')
+  );
+
+  elements.form.addEventListener(
+    'input',
+    handleFormInput
+  );
+
+  elements.form.addEventListener(
+    'submit',
+    submitSurvey
+  );
+
+  document
+    .getElementById('againButton')
+    .addEventListener('click', resetSurvey);
+
+  document
+    .getElementById('seeResultsButton')
+    .addEventListener(
+      'click',
+      () => switchView('results')
+    );
+
+  document
+    .getElementById('retryResultsButton')
+    .addEventListener('click', requestResults);
+
+  document
+    .getElementById('refreshButton')
+    .addEventListener('click', requestResults);
+
+  elements.testConnectionButton
+    .addEventListener('click', checkBackendConnection);
+
+  elements.questionSelect
+    .addEventListener('change', renderResults);
+
+  elements.searchInput
+    .addEventListener('input', renderResults);
+
+  document
+    .querySelectorAll('[data-results-mode]')
+    .forEach((button) => {
+      button.addEventListener('click', () => {
+        state.resultsMode =
+          button.dataset.resultsMode;
+
+        document
+          .querySelectorAll('[data-results-mode]')
+          .forEach((item) => {
+            const active = item === button;
+            item.classList.toggle(
+              'segmented-control__item--active',
+              active
+            );
+            item.setAttribute(
+              'aria-selected',
+              String(active)
+            );
+          });
+
+        elements.questionSelect.disabled =
+          state.resultsMode === 'all';
+
+        renderResults();
+      });
+    });
+
   window.addEventListener('hashchange', () => {
-    const view = window.location.hash === '#respuestas' ? 'results' : 'survey';
-    if (view !== state.currentView) switchView(view, { updateHash: false });
+    const view =
+      window.location.hash === '#respuestas'
+        ? 'results'
+        : 'survey';
+
+    if (view !== state.currentView) {
+      switchView(view, {
+        updateHash: false
+      });
+    }
   });
 }
 
 function switchView(view, options = {}) {
-  const target = view === 'results' ? 'results' : 'survey';
+  const target =
+    view === 'results'
+      ? 'results'
+      : 'survey';
+
   state.currentView = target;
 
-  elements.surveyView.classList.toggle('view--active', target === 'survey');
-  elements.resultsView.classList.toggle('view--active', target === 'results');
-  elements.navSurvey.classList.toggle('main-nav__item--active', target === 'survey');
-  elements.navResults.classList.toggle('main-nav__item--active', target === 'results');
+  elements.surveyView.classList.toggle(
+    'view--active',
+    target === 'survey'
+  );
+
+  elements.resultsView.classList.toggle(
+    'view--active',
+    target === 'results'
+  );
+
+  elements.navSurvey.classList.toggle(
+    'main-nav__item--active',
+    target === 'survey'
+  );
+
+  elements.navResults.classList.toggle(
+    'main-nav__item--active',
+    target === 'results'
+  );
 
   updateHero(target);
 
   if (options.updateHash !== false) {
-    const suffix = target === 'results' ? '#respuestas' : '';
-    history.replaceState(null, '', `${window.location.pathname}${window.location.search}${suffix}`);
+    history.replaceState(
+      null,
+      '',
+      target === 'results'
+        ? `${window.location.pathname}${window.location.search}#respuestas`
+        : `${window.location.pathname}${window.location.search}`
+    );
   }
 
-  if (target === 'results' && (!state.resultsLoaded || !state.results)) {
+  if (
+    target === 'results' &&
+    (!state.resultsLoaded || !state.results)
+  ) {
     requestResults();
   }
 
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 }
 
 function updateHero(view) {
   if (view === 'results') {
     elements.heroEyebrow.textContent = 'Resultados';
-    elements.heroTitle.textContent = 'Respuestas de la encuesta';
+    elements.heroTitle.textContent =
+      'Respuestas de la encuesta';
     elements.heroDescription.textContent =
       'Explore la participación por pregunta o consulte las cuatro respuestas registradas por cada persona.';
+
     elements.heroBadges.innerHTML = `
-      <span>Consulta en la misma página</span>
+      <span>Consulta directa desde Google Sheets</span>
       <span>Filtro por pregunta y participante</span>
-      <span>Actualización desde Google Sheets</span>
+      <span>Actualización manual disponible</span>
     `;
-    elements.heroSymbol.textContent = state.results
-      ? formatNumber(state.results.totalResponses)
-      : '↻';
-    elements.heroSymbolText.textContent = 'participantes';
+
+    elements.heroSymbol.textContent =
+      state.results
+        ? number(state.results.totalResponses)
+        : '↻';
+
+    elements.heroSymbolText.textContent =
+      'participantes';
+
     return;
   }
 
   elements.heroEyebrow.textContent = 'Participación';
   elements.heroTitle.textContent = config.title;
-  elements.heroDescription.textContent = config.intro || config.subtitle;
+  elements.heroDescription.textContent =
+    config.intro || config.subtitle;
+
   elements.heroBadges.innerHTML = `
     <span><b>${config.questions.length}</b> preguntas</span>
-    <span>Resultados en tiempo real</span>
-    <span>Información almacenada en Sheets</span>
+    <span>Almacenamiento en Google Sheets</span>
+    <span>Resultados visibles en el mismo HTML</span>
   `;
-  elements.heroSymbol.textContent = String(config.questions.length);
-  elements.heroSymbolText.textContent = 'preguntas';
+
+  elements.heroSymbol.textContent =
+    String(config.questions.length);
+
+  elements.heroSymbolText.textContent =
+    'preguntas';
 }
 
 function renderQuestions() {
-  const optionLetters = ['a', 'b', 'c', 'd', 'e', 'f'];
+  const letters = ['a', 'b', 'c', 'd', 'e', 'f'];
 
-  const question1Options = config.question1Options
-    .map((option, index) => `
-      <label class="choice-option">
-        <input
-          type="radio"
-          name="q1"
-          value="${escapeHtml(option)}"
-          data-question="1"
-        >
-        <span class="choice-option__marker" aria-hidden="true"></span>
-        <span class="choice-option__copy">
-          <span class="choice-option__letter">${optionLetters[index]}</span>
-          ${escapeHtml(option)}${index === 5 ? '. ¿Cuál?' : ''}
-        </span>
-      </label>
-    `)
-    .join('');
+  const question1Options =
+    config.question1Options
+      .map((option, index) => `
+        <label class="choice-option">
+          <input
+            type="radio"
+            name="q1"
+            value="${escapeHtml(option)}"
+          >
+          <span
+            class="choice-option__marker"
+            aria-hidden="true"
+          ></span>
+          <span class="choice-option__copy">
+            <span class="choice-option__letter">
+              ${letters[index]}
+            </span>
+            ${escapeHtml(option)}
+            ${index === 5 ? '. ¿Cuál?' : ''}
+          </span>
+        </label>
+      `)
+      .join('');
 
   elements.questions.innerHTML = `
-    <section class="question-card" id="question-card-0">
+    <section
+      class="question-card"
+      id="question-card-0"
+    >
       <div class="question-card__top">
         <span class="question-card__number">01</span>
-        <div>
-          <div class="question-card__label">
-            Según tu entendimiento, existe:
-            <span class="required">*</span>
-          </div>
+        <div class="question-card__label">
+          Según tu entendimiento, existe:
+          <span class="required">*</span>
         </div>
       </div>
 
@@ -810,12 +1335,21 @@ function renderQuestions() {
         Seleccione una sola opción.
       </p>
 
-      <div class="choice-list" role="radiogroup" aria-label="Pregunta 1">
+      <div
+        class="choice-list"
+        role="radiogroup"
+        aria-label="Pregunta 1"
+      >
         ${question1Options}
       </div>
 
-      <div class="other-response" id="q1OtherShell">
-        <label for="q1Other">Especifique la otra respuesta</label>
+      <div
+        class="other-response"
+        id="q1OtherShell"
+      >
+        <label for="q1Other">
+          Especifique la otra respuesta
+        </label>
         <input
           class="control"
           id="q1Other"
@@ -826,65 +1360,69 @@ function renderQuestions() {
       </div>
     </section>
 
-    <section class="question-card question-card--inactive" id="question-card-1">
+    <section
+      class="question-card question-card--inactive"
+      id="question-card-1"
+    >
       <div class="question-card__top">
         <span class="question-card__number">02</span>
         <div class="question-card__label">
-          Si en la pregunta anterior elegiste a, b o c, para ti ese Negocio
-          ¿es el mismo Negocio de Comercialización de Nuevas Soluciones?
+          Si en la pregunta anterior elegiste a, b o c,
+          para ti ese Negocio ¿es el mismo Negocio de
+          Comercialización de Nuevas Soluciones?
           <span class="required">*</span>
         </div>
       </div>
 
-      <div class="conditional-panel" id="q2ConditionalMessage">
+      <div
+        class="conditional-panel"
+        id="q2ConditionalMessage"
+      >
         <strong>Respuesta condicionada</strong>
         Seleccione primero una opción en la pregunta 1.
       </div>
 
-      <div class="choice-inline" id="q2Choices" hidden>
-        <label class="choice-option">
-          <input type="radio" name="q2" value="Sí" data-question="2">
-          <span class="choice-option__marker" aria-hidden="true"></span>
-          <span class="choice-option__copy">Sí</span>
-        </label>
-        <label class="choice-option">
-          <input type="radio" name="q2" value="No" data-question="2">
-          <span class="choice-option__marker" aria-hidden="true"></span>
-          <span class="choice-option__copy">No</span>
-        </label>
+      <div
+        class="choice-inline"
+        id="q2Choices"
+        hidden
+      >
+        ${renderYesNo('q2')}
       </div>
     </section>
 
-    <section class="question-card" id="question-card-2">
+    <section
+      class="question-card"
+      id="question-card-2"
+    >
       <div class="question-card__top">
         <span class="question-card__number">03</span>
         <div class="question-card__label">
-          Para ti, tener un estado de resultados (PyG) de carácter administrativo
-          implica que existe un Negocio en el entendimiento de los Negocios
+          Para ti, tener un estado de resultados (PyG)
+          de carácter administrativo implica que existe
+          un Negocio en el entendimiento de los Negocios
           definidos para el Grupo EPM?
           <span class="required">*</span>
         </div>
       </div>
 
       <div class="choice-inline">
-        <label class="choice-option">
-          <input type="radio" name="q3" value="Sí" data-question="3">
-          <span class="choice-option__marker" aria-hidden="true"></span>
-          <span class="choice-option__copy">Sí</span>
-        </label>
-        <label class="choice-option">
-          <input type="radio" name="q3" value="No" data-question="3">
-          <span class="choice-option__marker" aria-hidden="true"></span>
-          <span class="choice-option__copy">No</span>
-        </label>
+        ${renderYesNo('q3')}
       </div>
     </section>
 
-    <section class="question-card" id="question-card-3">
+    <section
+      class="question-card"
+      id="question-card-3"
+    >
       <div class="question-card__top">
         <span class="question-card__number">04</span>
-        <label class="question-card__label" for="q4">
-          ¿Cuántos negocios tiene declarados el Grupo EPM?
+        <label
+          class="question-card__label"
+          for="q4"
+        >
+          ¿Cuántos negocios tiene declarados
+          el Grupo EPM?
           <span class="required">*</span>
         </label>
       </div>
@@ -912,6 +1450,40 @@ function renderQuestions() {
   updateQuestion2State();
 }
 
+function renderYesNo(name) {
+  return `
+    <label class="choice-option">
+      <input
+        type="radio"
+        name="${name}"
+        value="Sí"
+      >
+      <span
+        class="choice-option__marker"
+        aria-hidden="true"
+      ></span>
+      <span class="choice-option__copy">
+        Sí
+      </span>
+    </label>
+
+    <label class="choice-option">
+      <input
+        type="radio"
+        name="${name}"
+        value="No"
+      >
+      <span
+        class="choice-option__marker"
+        aria-hidden="true"
+      ></span>
+      <span class="choice-option__copy">
+        No
+      </span>
+    </label>
+  `;
+}
+
 function handleFormInput(event) {
   if (
     event.target.matches('input[name="q1"]') ||
@@ -924,19 +1496,47 @@ function handleFormInput(event) {
 }
 
 function updateQuestion2State() {
-  const selectedQ1 = document.querySelector('input[name="q1"]:checked');
-  const selectedValue = selectedQ1?.value || '';
-  const selectedIndex = config.question1Options.indexOf(selectedValue);
-  const requiresQuestion2 = selectedIndex >= 0 && selectedIndex <= 2;
-  const isOther = selectedIndex === 5;
+  const selectedQ1 =
+    document.querySelector(
+      'input[name="q1"]:checked'
+    );
 
-  const otherShell = document.getElementById('q1OtherShell');
-  const otherInput = document.getElementById('q1Other');
-  const q2Card = document.getElementById('question-card-1');
-  const q2Choices = document.getElementById('q2Choices');
-  const q2Message = document.getElementById('q2ConditionalMessage');
+  const selectedValue =
+    selectedQ1?.value || '';
 
-  otherShell.classList.toggle('other-response--visible', isOther);
+  const selectedIndex =
+    config.question1Options
+      .indexOf(selectedValue);
+
+  const requiresQuestion2 =
+    selectedIndex >= 0 &&
+    selectedIndex <= 2;
+
+  const isOther =
+    selectedIndex === 5;
+
+  const otherShell =
+    document.getElementById('q1OtherShell');
+
+  const otherInput =
+    document.getElementById('q1Other');
+
+  const q2Card =
+    document.getElementById('question-card-1');
+
+  const q2Choices =
+    document.getElementById('q2Choices');
+
+  const q2Message =
+    document.getElementById(
+      'q2ConditionalMessage'
+    );
+
+  otherShell.classList.toggle(
+    'other-response--visible',
+    isOther
+  );
+
   otherInput.required = isOther;
 
   if (!isOther) {
@@ -944,58 +1544,113 @@ function updateQuestion2State() {
   }
 
   q2Choices.hidden = !requiresQuestion2;
-  q2Card.classList.toggle('question-card--inactive', !requiresQuestion2);
+
+  q2Card.classList.toggle(
+    'question-card--inactive',
+    !requiresQuestion2
+  );
 
   if (requiresQuestion2) {
     q2Message.hidden = true;
     return;
   }
 
-  document.querySelectorAll('input[name="q2"]').forEach((input) => {
-    input.checked = false;
-  });
+  document
+    .querySelectorAll('input[name="q2"]')
+    .forEach((input) => {
+      input.checked = false;
+    });
 
   q2Message.hidden = false;
 
   if (!selectedQ1) {
-    q2Message.className = 'conditional-panel';
+    q2Message.className =
+      'conditional-panel';
+
     q2Message.innerHTML = `
       <strong>Respuesta condicionada</strong>
       Seleccione primero una opción en la pregunta 1.
     `;
   } else {
-    q2Message.className = 'conditional-panel conditional-panel--success';
+    q2Message.className =
+      'conditional-panel conditional-panel--success';
+
     q2Message.innerHTML = `
       <strong>No aplica</strong>
-      De acuerdo con la opción seleccionada en la pregunta 1, esta pregunta
-      se registrará automáticamente como “No aplica”.
+      Según la opción elegida, esta respuesta se
+      almacenará automáticamente como “No aplica”.
     `;
   }
 }
 
 function collectAnswers() {
-  const q1Selected = document.querySelector('input[name="q1"]:checked');
-  const q1Option = q1Selected?.value || '';
-  const q1Index = config.question1Options.indexOf(q1Option);
-  const q1Other = document.getElementById('q1Other').value.trim();
-  const requiresQuestion2 = q1Index >= 0 && q1Index <= 2;
+  const q1Selected =
+    document.querySelector(
+      'input[name="q1"]:checked'
+    );
 
-  const q1Answer = q1Index === 5
-    ? (q1Other ? `Otra respuesta: ${q1Other}` : '')
-    : q1Option;
+  const q1Option =
+    q1Selected?.value || '';
 
-  const q2Answer = requiresQuestion2
-    ? (document.querySelector('input[name="q2"]:checked')?.value || '')
-    : (q1Answer ? 'No aplica' : '');
+  const q1Index =
+    config.question1Options
+      .indexOf(q1Option);
+
+  const q1Other =
+    document
+      .getElementById('q1Other')
+      .value
+      .trim();
+
+  const requiresQuestion2 =
+    q1Index >= 0 &&
+    q1Index <= 2;
+
+  const q1Answer =
+    q1Index === 5
+      ? (
+          q1Other
+            ? `Otra respuesta: ${q1Other}`
+            : ''
+        )
+      : q1Option;
+
+  const q2Answer =
+    requiresQuestion2
+      ? (
+          document.querySelector(
+            'input[name="q2"]:checked'
+          )?.value || ''
+        )
+      : (
+          q1Answer
+            ? 'No aplica'
+            : ''
+        );
 
   const q3Answer =
-    document.querySelector('input[name="q3"]:checked')?.value || '';
+    document.querySelector(
+      'input[name="q3"]:checked'
+    )?.value || '';
 
-  const q4Raw = document.getElementById('q4').value.trim();
-  const q4Answer = /^\d+$/.test(q4Raw) ? q4Raw : '';
+  const q4Raw =
+    document
+      .getElementById('q4')
+      .value
+      .trim();
+
+  const q4Answer =
+    /^\d+$/.test(q4Raw)
+      ? q4Raw
+      : '';
 
   return {
-    answers: [q1Answer, q2Answer, q3Answer, q4Answer],
+    answers: [
+      q1Answer,
+      q2Answer,
+      q3Answer,
+      q4Answer
+    ],
     q1Index,
     requiresQuestion2,
     q4Raw
@@ -1004,27 +1659,44 @@ function collectAnswers() {
 
 function updateProgress() {
   const response = collectAnswers();
-  const completed = response.answers.reduce(
-    (total, answer) => total + (answer ? 1 : 0),
-    0
-  );
-  const percentage = Math.round(
-    (completed / config.questions.length) * 100
-  );
 
-  elements.progressBar.style.width = `${percentage}%`;
+  const completed =
+    response.answers.reduce(
+      (total, answer) =>
+        total + (answer ? 1 : 0),
+      0
+    );
+
+  const percentage =
+    Math.round(
+      (
+        completed /
+        config.questions.length
+      ) * 100
+    );
+
+  elements.progressBar.style.width =
+    `${percentage}%`;
+
   elements.progressText.textContent =
     `${completed} de ${config.questions.length} preguntas respondidas`;
-  elements.progressPercentage.textContent = `${percentage}%`;
+
+  elements.progressPercentage.textContent =
+    `${percentage}%`;
 }
 
 async function submitSurvey(event) {
   event.preventDefault();
   clearMissingQuestions();
 
-  const name = document.getElementById('name');
-  const email = document.getElementById('email');
-  const response = collectAnswers();
+  const name =
+    document.getElementById('name');
+
+  const email =
+    document.getElementById('email');
+
+  const response =
+    collectAnswers();
 
   if (!name.value.trim()) {
     name.focus();
@@ -1035,7 +1707,10 @@ async function submitSurvey(event) {
     return;
   }
 
-  if (email.value && !email.checkValidity()) {
+  if (
+    email.value &&
+    !email.checkValidity()
+  ) {
     email.focus();
     showFormMessage(
       'Revise el formato del correo electrónico.',
@@ -1054,7 +1729,10 @@ async function submitSurvey(event) {
     return;
   }
 
-  if (response.requiresQuestion2 && !response.answers[1]) {
+  if (
+    response.requiresQuestion2 &&
+    !response.answers[1]
+  ) {
     markQuestionMissing(
       1,
       'Seleccione Sí o No en la pregunta 2.'
@@ -1082,22 +1760,24 @@ async function submitSurvey(event) {
     return;
   }
 
-  if (!isBackendConfigured()) {
+  if (!isWebAppConfigured()) {
     showFormMessage(
-      'La URL de Apps Script no está configurada correctamente.',
+      'La URL de Google Apps Script no está configurada correctamente.',
       'error'
     );
     return;
   }
 
-  const requestId = createNonce();
-  const fields = {
+  const payload = {
     action: 'submit',
-    requestId,
-    origin: window.location.origin,
+    requestId: createRequestId(),
     name: name.value.trim(),
     email: email.value.trim(),
-    area: document.getElementById('area').value.trim(),
+    area:
+      document
+        .getElementById('area')
+        .value
+        .trim(),
     q1: response.answers[0],
     q2: response.answers[1],
     q3: response.answers[2],
@@ -1108,34 +1788,28 @@ async function submitSurvey(event) {
   hideFormMessage();
 
   try {
-    await sendSubmission(fields);
-    await delay(650);
-    const confirmation = await waitForSubmission(requestId);
-
-    if (!confirmation.ok || confirmation.status !== 'saved') {
-      throw new Error(
-        confirmation.message ||
-        'Google Sheets no confirmó el almacenamiento.'
-      );
-    }
+    await sendToGoogleSheets(payload);
 
     setConnectionStatus(
       'online',
-      'Conectado con Google Sheets',
-      'La respuesta fue almacenada y confirmada correctamente.'
+      'Formulario enviado a Google Sheets',
+      'Apps Script recibió la solicitud de registro.'
     );
 
-    elements.form.style.display = 'none';
-    elements.progressShell.style.display = 'none';
-    elements.successView.style.display = 'block';
+    elements.form.style.display =
+      'none';
+
+    elements.progressShell.style.display =
+      'none';
+
+    elements.successView.style.display =
+      'block';
+
     elements.successMessage.textContent =
-      `Sus respuestas fueron registradas correctamente.${
-        confirmation.savedAt
-          ? ` Registro realizado el ${confirmation.savedAt}.`
-          : ''
-      }`;
+      'Tus respuestas fueron enviadas correctamente a Google Sheets.';
 
     state.resultsLoaded = false;
+
     elements.successView.scrollIntoView({
       behavior: 'smooth',
       block: 'center'
@@ -1143,12 +1817,14 @@ async function submitSurvey(event) {
   } catch (error) {
     setConnectionStatus(
       'offline',
-      'No fue posible confirmar el registro',
-      error.message || 'Revise la implementación de Apps Script.'
+      'No fue posible enviar el formulario',
+      error.message ||
+        'Revise la URL y la implementación de Apps Script.'
     );
+
     showFormMessage(
       error.message ||
-      'No fue posible guardar las respuestas en Google Sheets.',
+        'No fue posible enviar las respuestas.',
       'error'
     );
   } finally {
@@ -1156,10 +1832,98 @@ async function submitSurvey(event) {
   }
 }
 
-async function requestResults() {
-  if (state.resultsRequesting) return;
+async function sendToGoogleSheets(data) {
+  /*
+   * Mismo patrón del formulario de asistencia:
+   * GitHub Pages envía JSON a doPost(e) mediante fetch no-cors.
+   *
+   * No se agrega Content-Type application/json porque ese encabezado
+   * no pertenece a los encabezados simples permitidos en no-cors.
+   * Apps Script recibe igualmente el JSON dentro de e.postData.contents.
+   */
+  try {
+    await fetch(config.webAppUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      cache: 'no-store',
+      body: JSON.stringify(data)
+    });
+  } catch (error) {
+    console.error(
+      'Error de red al enviar a Google Sheets:',
+      error
+    );
 
-  if (!isBackendConfigured()) {
+    throw new Error(
+      'El navegador no pudo enviar la información a Google Apps Script.'
+    );
+  }
+}
+
+
+
+async function checkBackendConnection() {
+  if (!isWebAppConfigured()) {
+    setConnectionStatus(
+      'offline',
+      'Falta configurar Google Apps Script',
+      'Revise webAppUrl dentro de index.html.'
+    );
+    return;
+  }
+
+  setConnectionStatus(
+    'checking',
+    'Verificando conexión con Google Sheets…',
+    'Consultando la aplicación web de Apps Script.'
+  );
+
+  try {
+    const response = await jsonpRequest({
+      action: 'ping'
+    });
+
+    if (!response || !response.ok) {
+      throw new Error(
+        response?.message ||
+        'Apps Script respondió con un error.'
+      );
+    }
+
+    if (Number(response.version || 0) !== 9) {
+      throw new Error(
+        `La URL está publicando la versión ${
+          response.version || 'desconocida'
+        }. Debe publicar Code.gs v9.`
+      );
+    }
+
+    setConnectionStatus(
+      'online',
+      'Conectado con Google Sheets',
+      `${response.sheetName || 'Respuestas_Negocios'} · ${
+        number(response.totalResponses || 0)
+      } registros`
+    );
+
+    elements.navResponseCount.textContent =
+      number(response.totalResponses || 0);
+  } catch (error) {
+    setConnectionStatus(
+      'offline',
+      'No fue posible consultar Apps Script',
+      error.message ||
+        'Revise la implementación y sus permisos.'
+    );
+  }
+}
+
+async function requestResults() {
+  if (state.resultsRequesting) {
+    return;
+  }
+
+  if (!isWebAppConfigured()) {
     showResultsError(
       'La URL de Apps Script no está configurada correctamente.'
     );
@@ -1174,9 +1938,10 @@ async function requestResults() {
       action: 'results'
     });
 
-    if (!response.ok) {
+    if (!response || !response.ok) {
       throw new Error(
-        response.message || 'No fue posible consultar las respuestas.'
+        response?.message ||
+        'No fue posible consultar las respuestas.'
       );
     }
 
@@ -1186,18 +1951,25 @@ async function requestResults() {
     setConnectionStatus(
       'online',
       'Conectado con Google Sheets',
-      `Última consulta: ${response.data.updatedAt || 'completada'}.`
+      `${
+        response.data.totalResponses || 0
+      } participantes · ${
+        response.data.updatedAt || 'consulta completada'
+      }`
     );
 
     populateDashboard();
   } catch (error) {
     setConnectionStatus(
       'offline',
-      'No hay conexión con Google Sheets',
-      error.message || 'La aplicación web no respondió.'
+      'No fue posible consultar las respuestas',
+      error.message ||
+        'Revise Code.gs y la implementación.'
     );
+
     showResultsError(
-      error.message || 'No fue posible consultar las respuestas.'
+      error.message ||
+        'No fue posible consultar las respuestas.'
     );
   } finally {
     state.resultsRequesting = false;
@@ -1205,370 +1977,89 @@ async function requestResults() {
 }
 
 
-function populateDashboard() {
-  const results = state.results;
-  elements.navResponseCount.textContent = formatNumber(results.totalResponses);
-  document.getElementById('metricResponses').textContent =
-    formatNumber(results.totalResponses);
-  document.getElementById('metricQuestions').textContent =
-    formatNumber(results.totalQuestions);
-  document.getElementById('metricUpdated').textContent = results.updatedAt || '—';
 
-  elements.questionSelect.innerHTML = results.questions
-    .map((question, index) => `
-      <option value="${index}">P${question.number} · ${escapeHtml(question.text)}</option>
-    `)
-    .join('');
-
-  elements.resultsLoading.hidden = true;
-  elements.resultsError.hidden = true;
-  elements.dashboard.hidden = false;
-  updateHero('results');
-  renderResults();
-}
-
-function renderResults() {
-  if (!state.results) return;
-  if (state.resultsMode === 'all') {
-    renderConsolidatedResults();
-  } else {
-    renderQuestionResults();
-  }
-}
-
-function renderQuestionResults() {
-  const question = state.results.questions[Number(elements.questionSelect.value || 0)];
-  const query = normalize(elements.searchInput.value);
-  const rows = question.records.filter((row) =>
-    !query || normalize(
-      `${row.date} ${row.name} ${row.email} ${row.area} ${row.answer}`
-    ).includes(query)
-  );
-
-  document.getElementById('metricSelected').textContent = `P${question.number}`;
-  document.getElementById('metricSelectedCount').textContent =
-    `${formatNumber(question.total)} ${question.total === 1 ? 'respuesta' : 'respuestas'}`;
-
-  elements.questionTitle.innerHTML = `
-    <strong>Pregunta ${question.number}</strong>
-    <span>${escapeHtml(question.text)}</span>
-  `;
-
-  elements.tableHead.innerHTML = `
-    <tr>
-      <th>Fecha</th><th>Nombre</th><th>Correo</th><th>Área / empresa</th><th>Respuesta</th>
-    </tr>
-  `;
-  elements.tableBody.innerHTML = rows.map((row) => `
-    <tr>
-      <td class="cell-muted">${escapeHtml(row.date)}</td>
-      <td class="cell-name">${escapeHtml(row.name || 'Sin nombre')}</td>
-      <td>${escapeHtml(row.email || '—')}</td>
-      <td>${escapeHtml(row.area || '—')}</td>
-      <td class="cell-answer">${escapeHtml(row.answer || '—')}</td>
-    </tr>
-  `).join('');
-
-  elements.responsesMobile.innerHTML = rows.map((row) => `
-    <article class="response-card">
-      <div class="response-card__header">
-        <span class="response-card__name">${escapeHtml(row.name || 'Sin nombre')}</span>
-        <span class="response-card__date">${escapeHtml(row.date)}</span>
-      </div>
-      <div class="response-card__meta">
-        <span>${escapeHtml(row.area || 'Área no registrada')}</span>
-        <span>${escapeHtml(row.email || 'Correo no registrado')}</span>
-      </div>
-      <div class="response-card__answer">${escapeHtml(row.answer || '—')}</div>
-    </article>
-  `).join('');
-
-  toggleEmpty(rows.length === 0);
-}
-
-function renderConsolidatedResults() {
-  const query = normalize(elements.searchInput.value);
-  const rows = state.results.consolidated.filter((row) =>
-    !query || normalize(
-      `${row.date} ${row.name} ${row.email} ${row.area} ${row.answers.join(' ')}`
-    ).includes(query)
-  );
-
-  document.getElementById('metricSelected').textContent = 'Todas';
-  document.getElementById('metricSelectedCount').textContent =
-    `${formatNumber(state.results.totalResponses)} participantes`;
-  elements.questionTitle.innerHTML = `
-    <strong>Consolidado por participante</strong>
-    <span>Cada fila muestra las cuatro respuestas registradas por una persona.</span>
-  `;
-
-  elements.tableHead.innerHTML = `
-    <tr>
-      <th>Fecha</th><th>Nombre</th><th>Correo</th><th>Área / empresa</th>
-      ${state.results.questions.map((question) => `<th>P${question.number}</th>`).join('')}
-    </tr>
-  `;
-  elements.tableBody.innerHTML = rows.map((row) => `
-    <tr>
-      <td class="cell-muted">${escapeHtml(row.date)}</td>
-      <td class="cell-name">${escapeHtml(row.name || 'Sin nombre')}</td>
-      <td>${escapeHtml(row.email || '—')}</td>
-      <td>${escapeHtml(row.area || '—')}</td>
-      ${row.answers.map((answer) =>
-        `<td class="cell-answer">${escapeHtml(answer || '—')}</td>`
-      ).join('')}
-    </tr>
-  `).join('');
-
-  elements.responsesMobile.innerHTML = rows.map((row) => `
-    <article class="response-card">
-      <div class="response-card__header">
-        <span class="response-card__name">${escapeHtml(row.name || 'Sin nombre')}</span>
-        <span class="response-card__date">${escapeHtml(row.date)}</span>
-      </div>
-      <div class="response-card__meta">
-        <span>${escapeHtml(row.area || 'Área no registrada')}</span>
-        <span>${escapeHtml(row.email || 'Correo no registrado')}</span>
-      </div>
-      <div class="response-card__answers">
-        ${row.answers.map((answer, index) => `
-          <div>
-            <strong>Pregunta ${index + 1}</strong>
-            <span class="response-card__answer">${escapeHtml(answer || '—')}</span>
-          </div>
-        `).join('')}
-      </div>
-    </article>
-  `).join('');
-
-  toggleEmpty(rows.length === 0);
-}
-
-function resetSurvey() {
-  elements.form.reset();
-  clearMissingQuestions();
-  hideFormMessage();
-
-  elements.form.style.display = 'block';
-  elements.progressShell.style.display = 'block';
-  elements.successView.style.display = 'none';
-
-  updateQuestion2State();
-  updateProgress();
-  switchView('survey');
-}
-
-function showResultsLoading() {
-  elements.resultsLoading.hidden = false;
-  elements.resultsError.hidden = true;
-  elements.dashboard.hidden = true;
-}
-
-function showResultsError(message) {
-  elements.resultsLoading.hidden = true;
-  elements.dashboard.hidden = true;
-  elements.resultsError.hidden = false;
-  elements.resultsErrorText.textContent = message;
-}
-
-
-
-
-async function checkBackendConnection() {
-  if (!isBackendConfigured()) {
-    setConnectionStatus(
-      'offline',
-      'La URL de Apps Script no está configurada',
-      'Revise backendUrl dentro del HTML.'
-    );
-    return;
-  }
-
-  setConnectionStatus(
-    'checking',
-    'Verificando conexión con Google Sheets…',
-    'Consultando la versión publicada de Apps Script.'
-  );
-
-  try {
-    const response = await jsonpRequest({
-      action: 'ping'
-    });
-
-    if (!response.ok) {
-      throw new Error(response.message || 'Apps Script respondió con error.');
-    }
-
-    if (!response.configured) {
-      throw new Error(
-        'Apps Script está publicado, pero primero debe ejecutar configurarEncuesta().'
-      );
-    }
-
-    const requiredVersion = Number(config.requiredBackendVersion || 5);
-    const publishedVersion = Number(response.version || 0);
-
-    if (publishedVersion !== requiredVersion) {
-      throw new Error(
-        `La URL está activa, pero publica Apps Script v${
-          publishedVersion || 'desconocida'
-        }. Debe publicar la nueva versión v${requiredVersion}.`
-      );
-    }
-
-    state.connectionOnline = true;
-    setConnectionStatus(
-      'online',
-      'Conectado con Google Sheets',
-      `Apps Script v${response.version || '5'} · ${
-        response.sheetName || 'Respuestas_Negocios'
-      }`
-    );
-  } catch (error) {
-    state.connectionOnline = false;
-    setConnectionStatus(
-      'offline',
-      'No hay conexión con Google Sheets',
-      error.message || 'La aplicación web de Apps Script no respondió.'
-    );
-  }
-}
-
-function sendSubmission(fields) {
-  return new Promise((resolve, reject) => {
-    const frameName =
-      `epm-submit-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-
-    const iframe = document.createElement('iframe');
-    iframe.name = frameName;
-    iframe.title = 'Envío seguro a Google Sheets';
-    iframe.hidden = true;
-
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = config.backendUrl;
-    form.target = frameName;
-    form.enctype = 'application/x-www-form-urlencoded';
-    form.acceptCharset = 'UTF-8';
-    form.hidden = true;
-
-    Object.entries(fields).forEach(([name, value]) => {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = name;
-      input.value = String(value ?? '');
-      form.appendChild(input);
-    });
-
-    let submitted = false;
-
-    iframe.addEventListener('load', () => {
-      if (!submitted) return;
-      window.setTimeout(resolve, 250);
-    });
-
-    document.body.append(iframe, form);
-
-    try {
-      submitted = true;
-      form.submit();
-      window.setTimeout(resolve, 900);
-    } catch (error) {
-      reject(
-        new Error(
-          'El navegador no pudo enviar el formulario a Google Apps Script.'
-        )
-      );
-    }
-
-    window.setTimeout(() => {
-      form.remove();
-      iframe.remove();
-    }, 45000);
-  });
-}
-
-
-async function waitForSubmission(requestId) {
-  const maximumAttempts = 35;
-
-  for (let attempt = 0; attempt < maximumAttempts; attempt += 1) {
-    const response = await jsonpRequest({
-      action: 'status',
-      requestId
-    });
-
-    if (response.status === 'saved') {
-      return response;
-    }
-
-    if (response.status === 'error') {
-      throw new Error(
-        response.message || 'Apps Script rechazó la respuesta.'
-      );
-    }
-
-    await delay(attempt < 5 ? 650 : 1100);
-  }
-
-  throw new Error(
-    'Google Sheets no confirmó el registro. Abra Apps Script → Ejecuciones y compruebe si doPost fue ejecutado.'
-  );
-}
 
 function jsonpRequest(parameters, timeoutMs = 20000) {
   return new Promise((resolve, reject) => {
     const callbackName =
-      `__epmJsonp_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-    const script = document.createElement('script');
-    const url = new URL(config.backendUrl);
+      `__epmResults_${Date.now()}_${
+        Math.random().toString(36).slice(2)
+      }`;
 
-    Object.entries(parameters).forEach(([key, value]) => {
-      url.searchParams.set(key, String(value));
-    });
+    const url =
+      new URL(config.webAppUrl);
 
-    /*
-     * Apps Script documenta el parámetro prefix para JSONP.
-     * El backend devuelve: nombreCallback({ ...respuesta... });
-     */
-    url.searchParams.set('prefix', callbackName);
-    url.searchParams.set('_ts', String(Date.now()));
+    Object.entries(parameters)
+      .forEach(([key, value]) => {
+        url.searchParams.set(
+          key,
+          String(value)
+        );
+      });
 
-    let settled = false;
+    url.searchParams.set(
+      'callback',
+      callbackName
+    );
+
+    url.searchParams.set(
+      '_ts',
+      String(Date.now())
+    );
+
+    const script =
+      document.createElement('script');
+
+    let completed = false;
 
     const cleanup = () => {
       script.remove();
+
       try {
         delete window[callbackName];
       } catch (error) {
-        window[callbackName] = undefined;
+        window[callbackName] =
+          undefined;
       }
     };
 
-    const timer = window.setTimeout(() => {
-      if (settled) return;
-      settled = true;
-      cleanup();
-      reject(
-        new Error(
-          'Apps Script no devolvió JSONP. Confirme que la implementación sea pública, que use la versión v5 y que la URL termine en /exec.'
-        )
-      );
-    }, timeoutMs);
+    const timeout =
+      window.setTimeout(() => {
+        if (completed) {
+          return;
+        }
 
-    window[callbackName] = (payload) => {
-      if (settled) return;
-      settled = true;
-      window.clearTimeout(timer);
-      cleanup();
-      resolve(payload || {});
-    };
+        completed = true;
+        cleanup();
+
+        reject(
+          new Error(
+            'Apps Script no respondió a la consulta. Publique Code.gs v9 como una nueva versión y permita acceso a cualquier persona.'
+          )
+        );
+      }, timeoutMs);
+
+    window[callbackName] =
+      (payload) => {
+        if (completed) {
+          return;
+        }
+
+        completed = true;
+        window.clearTimeout(timeout);
+        cleanup();
+        resolve(payload || {});
+      };
 
     script.onerror = () => {
-      if (settled) return;
-      settled = true;
-      window.clearTimeout(timer);
+      if (completed) {
+        return;
+      }
+
+      completed = true;
+      window.clearTimeout(timeout);
       cleanup();
+
       reject(
         new Error(
           'El navegador no pudo cargar la respuesta de Apps Script.'
@@ -1582,77 +2073,741 @@ function jsonpRequest(parameters, timeoutMs = 20000) {
   });
 }
 
-function setConnectionStatus(status, title, detail) {
-  elements.connectionStatus.className =
-    `connection-card connection-card--${status}`;
-  elements.connectionTitle.textContent = title;
-  elements.connectionDetail.textContent = detail;
+function populateDashboard() {
+  const results =
+    state.results;
+
+  elements.navResponseCount.textContent =
+    number(results.totalResponses);
+
+  document
+    .getElementById('metricResponses')
+    .textContent =
+      number(results.totalResponses);
+
+  document
+    .getElementById('metricQuestions')
+    .textContent =
+      number(results.totalQuestions);
+
+  document
+    .getElementById('metricUpdated')
+    .textContent =
+      results.updatedAt || '—';
+
+  elements.questionSelect.innerHTML =
+    results.questions
+      .map((question, index) => `
+        <option value="${index}">
+          P${question.number} ·
+          ${escapeHtml(question.text)}
+        </option>
+      `)
+      .join('');
+
+  elements.resultsLoading.hidden = true;
+  elements.resultsError.hidden = true;
+  elements.dashboard.hidden = false;
+
+  updateHero('results');
+  renderResults();
 }
 
-function delay(milliseconds) {
-  return new Promise((resolve) => {
-    window.setTimeout(resolve, milliseconds);
+function renderResults() {
+  if (!state.results) {
+    return;
+  }
+
+  if (state.resultsMode === 'all') {
+    renderConsolidatedResults();
+  } else {
+    renderQuestionResults();
+  }
+}
+
+function renderQuestionResults() {
+  const question =
+    state.results.questions[
+      Number(
+        elements.questionSelect.value || 0
+      )
+    ];
+
+  const query =
+    normalize(
+      elements.searchInput.value
+    );
+
+  const rows =
+    question.records.filter(
+      (row) =>
+        !query ||
+        normalize(
+          `${row.date} ${row.name} ${row.email} ${row.area} ${row.answer}`
+        ).includes(query)
+    );
+
+  document
+    .getElementById('metricSelected')
+    .textContent =
+      `P${question.number}`;
+
+  document
+    .getElementById('metricSelectedCount')
+    .textContent =
+      `${number(rows.length)} ${
+        rows.length === 1
+          ? 'respuesta visible'
+          : 'respuestas visibles'
+      }`;
+
+  elements.questionTitle.innerHTML = `
+    <strong>Pregunta ${question.number}</strong>
+    <span>${escapeHtml(question.text)}</span>
+  `;
+
+  const groups =
+    buildAnswerGroups(
+      question.number,
+      rows
+    );
+
+  renderBarChart(
+    groups,
+    rows.length
+  );
+
+  renderAnswerGroups(
+    groups,
+    question.number
+  );
+
+  toggleEmpty(
+    rows.length === 0,
+    'question'
+  );
+}
+
+function buildAnswerGroups(
+  questionNumber,
+  rows
+) {
+  const map = new Map();
+
+  rows.forEach((row) => {
+    const rawAnswer =
+      String(row.answer || '').trim();
+
+    const category =
+      getAnswerCategory(
+        questionNumber,
+        rawAnswer
+      );
+
+    if (!map.has(category)) {
+      map.set(category, {
+        answer: category,
+        records: []
+      });
+    }
+
+    map.get(category).records.push({
+      ...row,
+      rawAnswer
+    });
   });
+
+  const preferredOrder =
+    getPreferredAnswerOrder(
+      questionNumber
+    );
+
+  const groups =
+    Array.from(map.values());
+
+  groups.sort((first, second) => {
+    const firstIndex =
+      preferredOrder.indexOf(
+        first.answer
+      );
+
+    const secondIndex =
+      preferredOrder.indexOf(
+        second.answer
+      );
+
+    if (
+      firstIndex >= 0 ||
+      secondIndex >= 0
+    ) {
+      return (
+        (
+          firstIndex >= 0
+            ? firstIndex
+            : 999
+        ) -
+        (
+          secondIndex >= 0
+            ? secondIndex
+            : 999
+        )
+      );
+    }
+
+    if (questionNumber === 4) {
+      const firstNumber =
+        Number(first.answer);
+
+      const secondNumber =
+        Number(second.answer);
+
+      if (
+        Number.isFinite(firstNumber) &&
+        Number.isFinite(secondNumber)
+      ) {
+        return firstNumber - secondNumber;
+      }
+    }
+
+    return (
+      second.records.length -
+      first.records.length ||
+      first.answer.localeCompare(
+        second.answer,
+        'es'
+      )
+    );
+  });
+
+  return groups;
+}
+
+function getAnswerCategory(
+  questionNumber,
+  rawAnswer
+) {
+  if (
+    questionNumber === 1 &&
+    /^Otra respuesta:/i.test(
+      rawAnswer
+    )
+  ) {
+    return 'Otra respuesta';
+  }
+
+  return rawAnswer || 'Sin respuesta';
+}
+
+function getPreferredAnswerOrder(
+  questionNumber
+) {
+  if (questionNumber === 1) {
+    return [
+      'Un Negocio de Comercialización',
+      'Un Negocio de Comercialización de servicios públicos',
+      'Un Negocio de Comercialización de servicios públicos y servicios de valor agregado',
+      'No existe ninguno de los anteriores, pero entiendo que debería existir',
+      'No existe ninguno de los anteriores y no considero que deba existir',
+      'Otra respuesta'
+    ];
+  }
+
+  if (questionNumber === 2) {
+    return [
+      'Sí',
+      'No',
+      'No aplica'
+    ];
+  }
+
+  if (questionNumber === 3) {
+    return [
+      'Sí',
+      'No'
+    ];
+  }
+
+  return [];
+}
+
+function renderBarChart(
+  groups,
+  total
+) {
+  elements.chartTotal.textContent =
+    number(total);
+
+  const maximum =
+    Math.max(
+      ...groups.map(
+        (group) =>
+          group.records.length
+      ),
+      1
+    );
+
+  elements.barChart.innerHTML =
+    groups.map((group, index) => {
+      const count =
+        group.records.length;
+
+      const percentage =
+        total
+          ? (
+              count /
+              total *
+              100
+            )
+          : 0;
+
+      const relativeWidth =
+        count
+          ? Math.max(
+              5,
+              count /
+              maximum *
+              100
+            )
+          : 0;
+
+      return `
+        <article
+          class="bar-item"
+          title="${
+            escapeHtml(group.answer)
+          }: ${count} respuestas"
+        >
+          <div class="bar-item__label">
+            <span class="bar-item__index">
+              ${getAnswerIndexLabel(index)}
+            </span>
+            <span class="bar-item__answer">
+              ${escapeHtml(group.answer)}
+            </span>
+          </div>
+
+          <div
+            class="bar-item__track"
+            aria-label="${
+              escapeHtml(group.answer)
+            }: ${percentage.toFixed(1)}%"
+          >
+            <span
+              class="bar-item__fill"
+              style="--bar-width: ${
+                relativeWidth.toFixed(2)
+              }%"
+            ></span>
+          </div>
+
+          <div class="bar-item__value">
+            <strong>${number(count)}</strong>
+            <span>
+              ${percentage.toFixed(1)}%
+            </span>
+          </div>
+        </article>
+      `;
+    }).join('');
+}
+
+function renderAnswerGroups(
+  groups,
+  questionNumber
+) {
+  elements.answerGroups.innerHTML =
+    groups.map((group, index) => `
+      <article class="answer-group">
+        <div class="answer-group__header">
+          <div class="answer-group__title">
+            <span class="answer-group__badge">
+              ${getAnswerIndexLabel(index)}
+            </span>
+            <h4>
+              ${escapeHtml(group.answer)}
+            </h4>
+          </div>
+
+          <span class="answer-group__count">
+            ${number(group.records.length)}
+            ${
+              group.records.length === 1
+                ? 'persona'
+                : 'personas'
+            }
+          </span>
+        </div>
+
+        <div class="people-grid">
+          ${group.records.map((record) => `
+            <article class="person-card">
+              <div class="person-card__top">
+                <strong class="person-card__name">
+                  ${escapeHtml(
+                    record.name ||
+                    'Sin nombre'
+                  )}
+                </strong>
+                <span class="person-card__date">
+                  ${escapeHtml(
+                    record.date || ''
+                  )}
+                </span>
+              </div>
+
+              <span class="person-card__meta">
+                ${escapeHtml(
+                  record.area ||
+                  'Área no registrada'
+                )}
+                ${
+                  record.email
+                    ? ` · ${escapeHtml(record.email)}`
+                    : ''
+                }
+              </span>
+
+              ${
+                questionNumber === 1 &&
+                /^Otra respuesta:/i.test(
+                  record.rawAnswer
+                )
+                  ? `
+                    <span class="person-card__custom-answer">
+                      ${escapeHtml(
+                        record.rawAnswer.replace(
+                          /^Otra respuesta:\s*/i,
+                          ''
+                        )
+                      )}
+                    </span>
+                  `
+                  : ''
+              }
+            </article>
+          `).join('')}
+        </div>
+      </article>
+    `).join('');
+}
+
+function getAnswerIndexLabel(index) {
+  const alphabet =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+  return (
+    alphabet[index] ||
+    String(index + 1)
+  );
+}
+
+function renderConsolidatedResults() {
+  elements.questionAnalytics.hidden = true;
+
+  const query =
+    normalize(
+      elements.searchInput.value
+    );
+
+  const rows =
+    state.results.consolidated.filter(
+      (row) =>
+        !query ||
+        normalize(
+          `${row.date} ${row.name} ${row.email} ${row.area} ${row.answers.join(' ')}`
+        ).includes(query)
+    );
+
+  document
+    .getElementById('metricSelected')
+    .textContent =
+      'Todas';
+
+  document
+    .getElementById('metricSelectedCount')
+    .textContent =
+      `${number(state.results.totalResponses)} participantes`;
+
+  elements.questionTitle.innerHTML = `
+    <strong>Consolidado por participante</strong>
+    <span>
+      Cada fila muestra las cuatro respuestas
+      registradas por una persona.
+    </span>
+  `;
+
+  elements.tableHead.innerHTML = `
+    <tr>
+      <th>Fecha</th>
+      <th>Nombre</th>
+      <th>Correo</th>
+      <th>Área / empresa</th>
+      ${state.results.questions
+        .map(
+          (question) =>
+            `<th>P${question.number}</th>`
+        )
+        .join('')}
+    </tr>
+  `;
+
+  elements.tableBody.innerHTML =
+    rows.map((row) => `
+      <tr>
+        <td class="cell-muted">
+          ${escapeHtml(row.date)}
+        </td>
+        <td class="cell-name">
+          ${escapeHtml(row.name || 'Sin nombre')}
+        </td>
+        <td>
+          ${escapeHtml(row.email || '—')}
+        </td>
+        <td>
+          ${escapeHtml(row.area || '—')}
+        </td>
+        ${row.answers.map(
+          (answer) => `
+            <td class="cell-answer">
+              ${escapeHtml(answer || '—')}
+            </td>
+          `
+        ).join('')}
+      </tr>
+    `).join('');
+
+  elements.responsesMobile.innerHTML =
+    rows.map((row) => `
+      <article class="response-card">
+        <div class="response-card__header">
+          <span class="response-card__name">
+            ${escapeHtml(row.name || 'Sin nombre')}
+          </span>
+          <span class="response-card__date">
+            ${escapeHtml(row.date)}
+          </span>
+        </div>
+
+        <div class="response-card__meta">
+          <span>
+            ${escapeHtml(row.area || 'Área no registrada')}
+          </span>
+          <span>
+            ${escapeHtml(row.email || 'Correo no registrado')}
+          </span>
+        </div>
+
+        <div class="response-card__answers">
+          ${row.answers
+            .map(
+              (answer, index) => `
+                <div>
+                  <strong>
+                    Pregunta ${index + 1}
+                  </strong>
+                  <span class="response-card__answer">
+                    ${escapeHtml(answer || '—')}
+                  </span>
+                </div>
+              `
+            )
+            .join('')}
+        </div>
+      </article>
+    `).join('');
+
+  toggleEmpty(rows.length === 0, 'all');
+}
+
+function showResultsLoading() {
+  elements.resultsLoading.hidden = false;
+  elements.resultsError.hidden = true;
+  elements.dashboard.hidden = true;
+}
+
+function showResultsError(message) {
+  elements.resultsLoading.hidden = true;
+  elements.dashboard.hidden = true;
+  elements.resultsError.hidden = false;
+  elements.resultsErrorText.textContent =
+    message;
+}
+
+function resetSurvey() {
+  elements.form.reset();
+  clearMissingQuestions();
+  hideFormMessage();
+
+  elements.form.style.display = 'block';
+  elements.progressShell.style.display =
+    'block';
+
+  elements.successView.style.display =
+    'none';
+
+  updateQuestion2State();
+  updateProgress();
+  switchView('survey');
+}
+
+function setConnectionStatus(
+  status,
+  title,
+  detail
+) {
+  elements.connectionStatus.className =
+    `connection-card connection-card--${status}`;
+
+  elements.connectionTitle.textContent =
+    title;
+
+  elements.connectionDetail.textContent =
+    detail;
 }
 
 function setSubmitLoading(loading) {
-  elements.submitButton.disabled = loading;
-  elements.submitButton.classList.toggle('primary-button--loading', loading);
+  elements.submitButton.disabled =
+    loading;
+
+  elements.submitButton.classList.toggle(
+    'primary-button--loading',
+    loading
+  );
+
   elements.submitButtonText.textContent =
-    loading ? 'Guardando respuestas…' : 'Enviar respuestas';
+    loading
+      ? 'Guardando…'
+      : 'Enviar respuestas';
 }
 
-function markQuestionMissing(index, message) {
-  const card = document.getElementById(`question-card-${index}`);
-  card.classList.add('question-card--missing');
+function markQuestionMissing(
+  index,
+  message
+) {
+  const card =
+    document.getElementById(
+      `question-card-${index}`
+    );
+
+  card.classList.add(
+    'question-card--missing'
+  );
+
   card.scrollIntoView({
     behavior: 'smooth',
     block: 'center'
   });
-  showFormMessage(message, 'error');
+
+  showFormMessage(
+    message,
+    'error'
+  );
 }
 
 function clearMissingQuestions() {
-  document.querySelectorAll('.question-card--missing').forEach((element) => {
-    element.classList.remove('question-card--missing');
-  });
+  document
+    .querySelectorAll(
+      '.question-card--missing'
+    )
+    .forEach((element) => {
+      element.classList.remove(
+        'question-card--missing'
+      );
+    });
 }
 
-function showFormMessage(text, type) {
-  elements.formMessage.textContent = text;
-  elements.formMessage.className = `message message--${type}`;
+function showFormMessage(
+  text,
+  type
+) {
+  elements.formMessage.textContent =
+    text;
+
+  elements.formMessage.className =
+    `message message--${type}`;
 }
 
 function hideFormMessage() {
   elements.formMessage.textContent = '';
-  elements.formMessage.className = 'message';
+  elements.formMessage.className =
+    'message';
 }
 
-function toggleEmpty(isEmpty) {
-  elements.emptyState.hidden = !isEmpty;
-  elements.tableBody.closest('.table-wrapper').hidden = isEmpty;
-  elements.responsesMobile.hidden = isEmpty;
+function toggleEmpty(
+  isEmpty,
+  mode = state.resultsMode
+) {
+  elements.emptyState.hidden =
+    !isEmpty;
+
+  const questionMode =
+    mode === 'question';
+
+  elements.questionAnalytics.hidden =
+    !questionMode ||
+    isEmpty;
+
+  elements
+    .tableBody
+    .closest('.table-wrapper')
+    .hidden =
+      questionMode ||
+      isEmpty;
+
+  elements.responsesMobile.hidden =
+    questionMode ||
+    isEmpty;
 }
 
-function isBackendConfigured() {
-  return /^https:\/\/script\.google\.com\/macros\/s\//.test(config.backendUrl || '');
+function isWebAppConfigured() {
+  return /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/
+    .test(config.webAppUrl || '');
 }
 
-function createNonce() {
-  return crypto.randomUUID
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+function createRequestId() {
+  if (
+    window.crypto &&
+    typeof window.crypto.randomUUID ===
+      'function'
+  ) {
+    return window.crypto.randomUUID();
+  }
+
+  return (
+    `${Date.now()}-` +
+    Math.random()
+      .toString(36)
+      .slice(2, 14)
+  );
 }
 
-function formatNumber(value) {
-  return new Intl.NumberFormat('es-CO').format(Number(value || 0));
+
+function delay(milliseconds) {
+  return new Promise((resolve) => {
+    window.setTimeout(
+      resolve,
+      milliseconds
+    );
+  });
+}
+
+function number(value) {
+  return new Intl.NumberFormat(
+    'es-CO'
+  ).format(
+    Number(value || 0)
+  );
 }
 
 function normalize(value) {
   return String(value || '')
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '');
+    .replace(
+      /[\u0300-\u036f]/g,
+      ''
+    );
 }
 
 function escapeHtml(value) {
@@ -1663,7 +2818,6 @@ function escapeHtml(value) {
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
 }
-
   </script>
 </body>
 </html>
