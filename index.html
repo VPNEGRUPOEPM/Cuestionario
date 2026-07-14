@@ -711,6 +711,523 @@
   }
 }
 
+
+/* =========================================================
+   AJUSTES INTERACTIVOS Y TITULARES CORPORATIVOS
+   ========================================================= */
+
+/* Títulos principales más sobrios y compactos */
+.hero__title,
+.hero-title,
+.hero-copy h1,
+.hero-copy h2,
+.page-title,
+.view-title {
+  font-size: clamp(24px, 3.2vw, 38px) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -.025em !important;
+  font-weight: 780 !important;
+}
+
+.hero__description,
+.hero-description {
+  max-width: 760px;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+}
+
+.selected-question {
+  padding: 15px 18px !important;
+}
+
+.selected-question strong {
+  font-size: 10px !important;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.selected-question span {
+  margin-top: 5px;
+  font-size: 14px !important;
+  line-height: 1.45 !important;
+  font-weight: 720;
+}
+
+/* Barras convertidas en opciones interactivas */
+.bar-item {
+  width: 100%;
+  border: 1px solid transparent;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+}
+
+.bar-item:focus-visible {
+  outline: 3px solid rgba(0, 132, 61, .18);
+  outline-offset: 2px;
+}
+
+.bar-item--selected {
+  border-color: var(--green);
+  background: var(--mint);
+  box-shadow:
+    0 0 0 3px rgba(0,132,61,.08),
+    0 8px 22px rgba(0,92,43,.08);
+}
+
+.bar-item--selected .bar-item__index {
+  color: #ffffff;
+  background: var(--green);
+}
+
+.bar-item--selected .bar-item__answer {
+  color: var(--green-dark);
+}
+
+.bar-item--selected .bar-item__track {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(0,132,61,.08) 0,
+      rgba(0,132,61,.08) calc(25% - 1px),
+      rgba(0,132,61,.16) 25%
+    );
+}
+
+.answer-detail-placeholder {
+  display: grid;
+  place-items: center;
+  min-height: 210px;
+  padding: 36px 24px;
+  color: var(--muted);
+  text-align: center;
+  background:
+    radial-gradient(
+      circle at 50% 0,
+      rgba(122,211,0,.08),
+      transparent 55%
+    ),
+    #ffffff;
+}
+
+.answer-detail-placeholder[hidden] {
+  display: none;
+}
+
+.answer-detail-placeholder__icon {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin-bottom: 13px;
+  border: 1px solid #cfe1d5;
+  border-radius: 15px;
+  color: var(--green-dark);
+  background: var(--mint);
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.answer-detail-placeholder strong {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+
+.answer-detail-placeholder p {
+  max-width: 390px;
+  margin: 7px 0 0;
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.answer-groups[hidden] {
+  display: none;
+}
+
+.answer-group {
+  animation: detail-in 220ms ease both;
+}
+
+@keyframes detail-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+}
+
+@media (max-width: 700px) {
+  .hero__title,
+  .hero-title,
+  .hero-copy h1,
+  .hero-copy h2,
+  .page-title,
+  .view-title {
+    font-size: 25px !important;
+  }
+
+  .selected-question span {
+    font-size: 13px !important;
+  }
+}
+
+
+/* =========================================================
+   V12 · BARRAS VERTICALES CON NOMBRES POR OPCIÓN
+   ========================================================= */
+
+.chart-card__subtitle {
+  max-width: 690px;
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.vertical-chart-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 3px 2px 10px;
+  scrollbar-color: #b9cfc1 transparent;
+  scrollbar-width: thin;
+}
+
+.vertical-bar-chart {
+  --option-count: 1;
+  display: grid;
+  grid-template-columns:
+    repeat(
+      var(--option-count),
+      minmax(190px, 1fr)
+    );
+  align-items: stretch;
+  gap: 14px;
+  min-width:
+    max(
+      100%,
+      calc(var(--option-count) * 210px)
+    );
+}
+
+.vertical-option {
+  display: grid;
+  grid-template-rows: 282px auto 1fr;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #dfe9e2;
+  border-radius: 17px;
+  background: #ffffff;
+  box-shadow: 0 6px 20px rgba(0,72,35,.055);
+}
+
+.vertical-option__chart {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 282px;
+  padding: 50px 24px 18px;
+  border-bottom: 1px solid #e4ece7;
+  background:
+    repeating-linear-gradient(
+      to top,
+      transparent 0,
+      transparent calc(25% - 1px),
+      rgba(0,107,49,.09) 25%
+    ),
+    linear-gradient(
+      180deg,
+      #fbfdfb 0,
+      #f3f8f5 100%
+    );
+}
+
+.vertical-option__axis {
+  position: absolute;
+  inset: 14px auto auto 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 850;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.vertical-option__axis::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 4px rgba(0,132,61,.09);
+}
+
+.vertical-option__value {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  z-index: 2;
+  min-width: 70px;
+  padding: 7px 9px;
+  border: 1px solid #cfe1d5;
+  border-radius: 11px;
+  background: rgba(255,255,255,.95);
+  box-shadow: 0 5px 15px rgba(0,75,35,.08);
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.vertical-option__value strong,
+.vertical-option__value span {
+  display: block;
+}
+
+.vertical-option__value strong {
+  color: var(--green-dark);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.vertical-option__value span {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 850;
+}
+
+.vertical-option__track {
+  position: relative;
+  width: clamp(48px, 38%, 82px);
+  height: 205px;
+  overflow: hidden;
+  border: 1px solid rgba(0,107,49,.12);
+  border-radius: 13px 13px 5px 5px;
+  background:
+    linear-gradient(
+      to top,
+      rgba(0,132,61,.045),
+      rgba(0,132,61,.015)
+    );
+}
+
+.vertical-option__fill {
+  position: absolute;
+  inset: auto 0 0;
+  height: var(--bar-height, 0%);
+  min-height: var(--bar-min-height, 0px);
+  border-radius: 12px 12px 4px 4px;
+  background:
+    linear-gradient(
+      180deg,
+      var(--lime) 0,
+      var(--green) 52%,
+      var(--green-dark) 100%
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.32),
+    0 -5px 18px rgba(0,132,61,.12);
+  animation:
+    grow-vertical-bar
+    560ms
+    cubic-bezier(.2,.8,.2,1)
+    both;
+}
+
+.vertical-option--zero
+.vertical-option__fill {
+  background: #dfe8e2;
+  box-shadow: none;
+}
+
+@keyframes grow-vertical-bar {
+  from {
+    height: 0;
+    min-height: 0;
+  }
+}
+
+.vertical-option__label {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: flex-start;
+  gap: 9px;
+  min-height: 104px;
+  padding: 14px 13px;
+  border-bottom: 1px solid #e5ece7;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(232,243,236,.72),
+      rgba(255,255,255,.98)
+    );
+}
+
+.vertical-option__index {
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  border-radius: 9px;
+  color: #ffffff;
+  background: var(--green);
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.vertical-option__answer {
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 850;
+  line-height: 1.42;
+}
+
+.vertical-option__people {
+  min-height: 128px;
+  padding: 13px;
+  background: #ffffff;
+}
+
+.vertical-option__people-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: var(--green-dark);
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+
+.vertical-option__people-count {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border-radius: 999px;
+  color: var(--green-dark);
+  background: var(--mint);
+  font-size: 8px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.vertical-name-list {
+  display: grid;
+  gap: 7px;
+  max-height: 238px;
+  overflow-y: auto;
+  padding-right: 3px;
+  scrollbar-color: #c2d4c8 transparent;
+  scrollbar-width: thin;
+}
+
+.vertical-name-item {
+  padding: 9px 10px;
+  border: 1px solid #e1e9e4;
+  border-radius: 10px;
+  background: #fafcfb;
+}
+
+.vertical-name-item strong,
+.vertical-name-item span {
+  display: block;
+}
+
+.vertical-name-item strong {
+  color: var(--ink);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.vertical-name-item span {
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vertical-name-item__custom {
+  margin-top: 6px !important;
+  padding: 6px 7px;
+  border-left: 3px solid var(--lime);
+  border-radius: 0 7px 7px 0;
+  color: var(--ink-soft) !important;
+  background: #f3f8ef;
+  font-size: 9px !important;
+  font-style: italic;
+  line-height: 1.45 !important;
+  white-space: normal !important;
+}
+
+.vertical-option__empty {
+  display: grid;
+  place-items: center;
+  min-height: 78px;
+  padding: 16px 10px;
+  border: 1px dashed #cad7cf;
+  border-radius: 10px;
+  color: var(--muted);
+  background: #fbfcfb;
+  font-size: 9px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* La visual anterior queda anulada; la conexión no se toca. */
+.bar-chart,
+.answer-detail-section {
+  display: none !important;
+}
+
+@media (max-width: 700px) {
+  .chart-card__header {
+    align-items: stretch;
+  }
+
+  .vertical-bar-chart {
+    grid-template-columns:
+      repeat(
+        var(--option-count),
+        minmax(172px, 1fr)
+      );
+    min-width:
+      max(
+        100%,
+        calc(var(--option-count) * 186px)
+      );
+  }
+
+  .vertical-option {
+    grid-template-rows: 246px auto 1fr;
+  }
+
+  .vertical-option__chart {
+    min-height: 246px;
+    padding:
+      48px
+      18px
+      15px;
+  }
+
+  .vertical-option__track {
+    height: 172px;
+  }
+
+  .vertical-option__label {
+    min-height: 96px;
+  }
+
+  .vertical-name-list {
+    max-height: 190px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -948,26 +1465,19 @@
                 <div>
                   <span class="chart-card__eyebrow">Distribución de respuestas</span>
                   <h3>Participación por opción</h3>
+                  <p class="chart-card__subtitle">
+                    Cada columna muestra la cantidad de respuestas y, debajo, las personas que eligieron esa opción.
+                  </p>
                 </div>
                 <div class="chart-card__total">
                   <strong id="chartTotal">0</strong>
                   <span>respuestas visibles</span>
                 </div>
               </div>
-              <div class="bar-chart" id="barChart"></div>
-            </div>
 
-            <div class="answer-detail-section">
-              <div class="answer-detail-section__header">
-                <div>
-                  <span class="chart-card__eyebrow">Detalle por respuesta</span>
-                  <h3>Personas que eligieron cada opción</h3>
-                </div>
-                <p>
-                  Los nombres aparecen agrupados según la respuesta seleccionada.
-                </p>
+              <div class="vertical-chart-scroll">
+                <div class="vertical-bar-chart" id="barChart"></div>
               </div>
-              <div class="answer-groups" id="answerGroups"></div>
             </div>
           </section>
 
@@ -1075,7 +1585,6 @@ const elements = {
   testConnectionButton: document.getElementById('testConnectionButton'),
   questionAnalytics: document.getElementById('questionAnalytics'),
   barChart: document.getElementById('barChart'),
-  answerGroups: document.getElementById('answerGroups'),
   chartTotal: document.getElementById('chartTotal')
 };
 
@@ -2174,11 +2683,7 @@ function renderQuestionResults() {
 
   renderBarChart(
     groups,
-    rows.length
-  );
-
-  renderAnswerGroups(
-    groups,
+    rows.length,
     question.number
   );
 
@@ -2192,7 +2697,19 @@ function buildAnswerGroups(
   questionNumber,
   rows
 ) {
+  const preferredOrder =
+    getPreferredAnswerOrder(
+      questionNumber
+    );
+
   const map = new Map();
+
+  preferredOrder.forEach((answer) => {
+    map.set(answer, {
+      answer,
+      records: []
+    });
+  });
 
   rows.forEach((row) => {
     const rawAnswer =
@@ -2216,11 +2733,6 @@ function buildAnswerGroups(
       rawAnswer
     });
   });
-
-  const preferredOrder =
-    getPreferredAnswerOrder(
-      questionNumber
-    );
 
   const groups =
     Array.from(map.values());
@@ -2332,7 +2844,8 @@ function getPreferredAnswerOrder(
 
 function renderBarChart(
   groups,
-  total
+  total,
+  questionNumber
 ) {
   elements.chartTotal.textContent =
     number(total);
@@ -2345,6 +2858,13 @@ function renderBarChart(
       ),
       1
     );
+
+  elements.barChart.style.setProperty(
+    '--option-count',
+    String(
+      Math.max(groups.length, 1)
+    )
+  );
 
   elements.barChart.innerHTML =
     groups.map((group, index) => {
@@ -2360,136 +2880,143 @@ function renderBarChart(
             )
           : 0;
 
-      const relativeWidth =
+      const relativeHeight =
         count
           ? Math.max(
-              5,
+              8,
               count /
               maximum *
               100
             )
           : 0;
 
+      const people =
+        group.records.map((record) => `
+          <article class="vertical-name-item">
+            <strong>
+              ${escapeHtml(
+                record.name ||
+                'Sin nombre'
+              )}
+            </strong>
+
+            <span>
+              ${escapeHtml(
+                record.area ||
+                'Área no registrada'
+              )}
+              ${
+                record.date
+                  ? ` · ${escapeHtml(record.date)}`
+                  : ''
+              }
+            </span>
+
+            ${
+              questionNumber === 1 &&
+              /^Otra respuesta:/i.test(
+                record.rawAnswer
+              )
+                ? `
+                  <span class="vertical-name-item__custom">
+                    ${escapeHtml(
+                      record.rawAnswer.replace(
+                        /^Otra respuesta:\s*/i,
+                        ''
+                      )
+                    )}
+                  </span>
+                `
+                : ''
+            }
+          </article>
+        `).join('');
+
       return `
         <article
-          class="bar-item"
-          title="${
-            escapeHtml(group.answer)
-          }: ${count} respuestas"
+          class="vertical-option ${
+            count === 0
+              ? 'vertical-option--zero'
+              : ''
+          }"
         >
-          <div class="bar-item__label">
-            <span class="bar-item__index">
+          <div class="vertical-option__chart">
+            <span class="vertical-option__axis">
+              Participantes
+            </span>
+
+            <div class="vertical-option__value">
+              <strong>
+                ${number(count)}
+              </strong>
+              <span>
+                ${percentage.toFixed(1)}%
+              </span>
+            </div>
+
+            <div
+              class="vertical-option__track"
+              title="${
+                escapeHtml(group.answer)
+              }: ${count} respuestas"
+            >
+              <span
+                class="vertical-option__fill"
+                style="
+                  --bar-height: ${
+                    relativeHeight.toFixed(2)
+                  }%;
+                  --bar-min-height: ${
+                    count ? '9px' : '0px'
+                  };
+                "
+              ></span>
+            </div>
+          </div>
+
+          <div class="vertical-option__label">
+            <span class="vertical-option__index">
               ${getAnswerIndexLabel(index)}
             </span>
-            <span class="bar-item__answer">
+
+            <span class="vertical-option__answer">
               ${escapeHtml(group.answer)}
             </span>
           </div>
 
-          <div
-            class="bar-item__track"
-            aria-label="${
-              escapeHtml(group.answer)
-            }: ${percentage.toFixed(1)}%"
-          >
-            <span
-              class="bar-item__fill"
-              style="--bar-width: ${
-                relativeWidth.toFixed(2)
-              }%"
-            ></span>
-          </div>
+          <div class="vertical-option__people">
+            <div class="vertical-option__people-title">
+              <span>
+                Eligieron esta opción
+              </span>
 
-          <div class="bar-item__value">
-            <strong>${number(count)}</strong>
-            <span>
-              ${percentage.toFixed(1)}%
-            </span>
+              <span class="vertical-option__people-count">
+                ${number(count)}
+              </span>
+            </div>
+
+            ${
+              count
+                ? `
+                  <div class="vertical-name-list">
+                    ${people}
+                  </div>
+                `
+                : `
+                  <div class="vertical-option__empty">
+                    Ningún participante eligió esta respuesta.
+                  </div>
+                `
+            }
           </div>
         </article>
       `;
     }).join('');
 }
 
-function renderAnswerGroups(
-  groups,
-  questionNumber
-) {
-  elements.answerGroups.innerHTML =
-    groups.map((group, index) => `
-      <article class="answer-group">
-        <div class="answer-group__header">
-          <div class="answer-group__title">
-            <span class="answer-group__badge">
-              ${getAnswerIndexLabel(index)}
-            </span>
-            <h4>
-              ${escapeHtml(group.answer)}
-            </h4>
-          </div>
 
-          <span class="answer-group__count">
-            ${number(group.records.length)}
-            ${
-              group.records.length === 1
-                ? 'persona'
-                : 'personas'
-            }
-          </span>
-        </div>
 
-        <div class="people-grid">
-          ${group.records.map((record) => `
-            <article class="person-card">
-              <div class="person-card__top">
-                <strong class="person-card__name">
-                  ${escapeHtml(
-                    record.name ||
-                    'Sin nombre'
-                  )}
-                </strong>
-                <span class="person-card__date">
-                  ${escapeHtml(
-                    record.date || ''
-                  )}
-                </span>
-              </div>
 
-              <span class="person-card__meta">
-                ${escapeHtml(
-                  record.area ||
-                  'Área no registrada'
-                )}
-                ${
-                  record.email
-                    ? ` · ${escapeHtml(record.email)}`
-                    : ''
-                }
-              </span>
-
-              ${
-                questionNumber === 1 &&
-                /^Otra respuesta:/i.test(
-                  record.rawAnswer
-                )
-                  ? `
-                    <span class="person-card__custom-answer">
-                      ${escapeHtml(
-                        record.rawAnswer.replace(
-                          /^Otra respuesta:\s*/i,
-                          ''
-                        )
-                      )}
-                    </span>
-                  `
-                  : ''
-              }
-            </article>
-          `).join('')}
-        </div>
-      </article>
-    `).join('');
-}
 
 function getAnswerIndexLabel(index) {
   const alphabet =
