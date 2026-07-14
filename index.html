@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#00843D">
   <meta name="description" content="Encuesta de participación y consulta de respuestas del Grupo EPM.">
   <title>Encuesta de participación | Grupo EPM</title>
-  <!-- Conexión robusta Apps Script v4: POST + confirmación + JSONP -->
+  <!-- Conexión estable Apps Script v5: FORM POST + JSONP prefix -->
   <!-- ESTILOS CORPORATIVOS EPM INTEGRADOS -->
   <style>
 :root{
@@ -576,6 +576,7 @@ window.SURVEY_CONFIG = {
   "subtitle": "Queremos conocer su entendimiento sobre la declaración y alcance de los Negocios del Grupo EPM.",
   "intro": "Responda las cuatro preguntas. La segunda se habilitará únicamente cuando corresponda según la respuesta seleccionada en la primera.",
   "backendUrl": "https://script.google.com/macros/s/AKfycbwWjbPKN1HVaFyyrF1N7jA9_B7Ehm3_DRABc-Nh625Zbze734ICqt81IMNzoM1fqcCV/exec",
+  "requiredBackendVersion": 5,
   "questions": [
     "Según tu entendimiento, existe:",
     "Si en la pregunta anterior elegiste a, b o c, para ti ese Negocio ¿es el mismo Negocio de Comercialización de Nuevas Soluciones?",
@@ -1108,6 +1109,7 @@ async function submitSurvey(event) {
 
   try {
     await sendSubmission(fields);
+    await delay(650);
     const confirmation = await waitForSubmission(requestId);
 
     if (!confirmation.ok || confirmation.status !== 'saved') {
@@ -1403,11 +1405,22 @@ async function checkBackendConnection() {
       );
     }
 
+    const requiredVersion = Number(config.requiredBackendVersion || 5);
+    const publishedVersion = Number(response.version || 0);
+
+    if (publishedVersion !== requiredVersion) {
+      throw new Error(
+        `La URL está activa, pero publica Apps Script v${
+          publishedVersion || 'desconocida'
+        }. Debe publicar la nueva versión v${requiredVersion}.`
+      );
+    }
+
     state.connectionOnline = true;
     setConnectionStatus(
       'online',
       'Conectado con Google Sheets',
-      `Apps Script v${response.version || '4'} · ${
+      `Apps Script v${response.version || '5'} · ${
         response.sheetName || 'Respuestas_Negocios'
       }`
     );
@@ -1421,53 +1434,63 @@ async function checkBackendConnection() {
   }
 }
 
-async function sendSubmission(fields) {
-  const body = new URLSearchParams(fields);
+function sendSubmission(fields) {
+  return new Promise((resolve, reject) => {
+    const frameName =
+      `epm-submit-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-  try {
-    await fetch(config.backendUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      cache: 'no-store',
-      body
+    const iframe = document.createElement('iframe');
+    iframe.name = frameName;
+    iframe.title = 'Envío seguro a Google Sheets';
+    iframe.hidden = true;
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = config.backendUrl;
+    form.target = frameName;
+    form.enctype = 'application/x-www-form-urlencoded';
+    form.acceptCharset = 'UTF-8';
+    form.hidden = true;
+
+    Object.entries(fields).forEach(([name, value]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = String(value ?? '');
+      form.appendChild(input);
     });
-  } catch (error) {
-    submitWithHiddenForm(fields);
-  }
-}
 
-function submitWithHiddenForm(fields) {
-  const frameName = `epm-submit-${Date.now()}`;
-  const iframe = document.createElement('iframe');
-  iframe.name = frameName;
-  iframe.title = 'Envío a Google Sheets';
-  iframe.hidden = true;
+    let submitted = false;
 
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = config.backendUrl;
-  form.target = frameName;
-  form.hidden = true;
+    iframe.addEventListener('load', () => {
+      if (!submitted) return;
+      window.setTimeout(resolve, 250);
+    });
 
-  Object.entries(fields).forEach(([name, value]) => {
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = name;
-    input.value = value;
-    form.appendChild(input);
+    document.body.append(iframe, form);
+
+    try {
+      submitted = true;
+      form.submit();
+      window.setTimeout(resolve, 900);
+    } catch (error) {
+      reject(
+        new Error(
+          'El navegador no pudo enviar el formulario a Google Apps Script.'
+        )
+      );
+    }
+
+    window.setTimeout(() => {
+      form.remove();
+      iframe.remove();
+    }, 45000);
   });
-
-  document.body.append(iframe, form);
-  form.submit();
-
-  window.setTimeout(() => {
-    form.remove();
-    iframe.remove();
-  }, 15000);
 }
+
 
 async function waitForSubmission(requestId) {
-  const maximumAttempts = 24;
+  const maximumAttempts = 35;
 
   for (let attempt = 0; attempt < maximumAttempts; attempt += 1) {
     const response = await jsonpRequest({
@@ -1485,11 +1508,11 @@ async function waitForSubmission(requestId) {
       );
     }
 
-    await delay(attempt < 4 ? 600 : 1000);
+    await delay(attempt < 5 ? 650 : 1100);
   }
 
   throw new Error(
-    'La solicitud llegó al servidor, pero Google Sheets no confirmó el registro dentro del tiempo esperado.'
+    'Google Sheets no confirmó el registro. Abra Apps Script → Ejecuciones y compruebe si doPost fue ejecutado.'
   );
 }
 
@@ -1504,8 +1527,12 @@ function jsonpRequest(parameters, timeoutMs = 20000) {
       url.searchParams.set(key, String(value));
     });
 
-    url.searchParams.set('callback', callbackName);
-    url.searchParams.set('_', String(Date.now()));
+    /*
+     * Apps Script documenta el parámetro prefix para JSONP.
+     * El backend devuelve: nombreCallback({ ...respuesta... });
+     */
+    url.searchParams.set('prefix', callbackName);
+    url.searchParams.set('_ts', String(Date.now()));
 
     let settled = false;
 
@@ -1524,7 +1551,7 @@ function jsonpRequest(parameters, timeoutMs = 20000) {
       cleanup();
       reject(
         new Error(
-          'Apps Script no respondió. Confirme que la implementación sea pública y use una nueva versión.'
+          'Apps Script no devolvió JSONP. Confirme que la implementación sea pública, que use la versión v5 y que la URL termine en /exec.'
         )
       );
     }, timeoutMs);
