@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#00843D">
   <meta name="description" content="Encuesta de participación y consulta de respuestas del Grupo EPM.">
   <title>Encuesta de participación | Grupo EPM</title>
+  <!-- Corrección de comunicación con Apps Script: iframe v2 -->
   <!-- ESTILOS CORPORATIVOS EPM INTEGRADOS -->
   <style>
 :root{
@@ -552,7 +553,7 @@ function submitSurvey(event) {
   startPending(nonce, 'submit-result', () => {
     setSubmitLoading(false);
     showFormMessage(
-      'El servidor no respondió. Revise la implementación de Apps Script.',
+      'No se recibió la confirmación de Apps Script. Actualice Code.gs y vuelva a publicar una nueva versión de la aplicación web.',
       'error'
     );
   });
@@ -573,7 +574,7 @@ function requestResults() {
   const nonce = createNonce();
   startPending(nonce, 'results-result', () => {
     showResultsError(
-      'El servidor no respondió. Revise la implementación de Google Apps Script.'
+      'No se recibió la respuesta de Apps Script. Verifique que Code.gs esté actualizado y que la implementación use una nueva versión.'
     );
   });
   postToBackend({
@@ -584,7 +585,12 @@ function requestResults() {
 }
 
 function receiveBackendMessage(event) {
-  if (event.source !== backendFrame.contentWindow || !state.pending) return;
+  /*
+   * Apps Script sirve HtmlService dentro de un iframe interno de Google.
+   * Por esa razón, event.source no siempre es backendFrame.contentWindow.
+   * La respuesta se valida mediante source, type y el nonce único de la solicitud.
+   */
+  if (!state.pending) return;
 
   const data = event.data || {};
   if (
